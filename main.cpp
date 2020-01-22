@@ -2,6 +2,7 @@
 #include<string>
 #include<vector>
 #include<time.h>
+#include"cppTable.hpp"
 
 using namespace std;
 
@@ -38,3 +39,4 @@ struct Film {
 struct Actor {
     string name;
 };
+
