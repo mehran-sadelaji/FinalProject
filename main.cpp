@@ -28,8 +28,8 @@ void menu();
 void actorMenu();
 void filmMenu();
 void sansMenu();
-
-
+void saloneMenu();
+void cinemaMenu();
 
 // structs
 
@@ -302,6 +302,12 @@ void menu() {
         case 3:
             sansMenu();
             break;
+        case 4:
+            saloneMenu();
+            break;
+        case 5:
+            cinemaMenu();
+            break;
 
     default:
         system("clear");
@@ -490,6 +496,60 @@ void sansMenu() {
         cout << "sans added successfully :)";
     } else {
         cout << "sans is making conflict :(";
+    }
+    cout.flush();
+    delay();
+    menu();
+}
+
+void saloneMenu() {
+    Salone salone;
+    salone.code = generateRandomNum();
+
+    ConsoleTable table(1, 1, samilton::Alignment::centre);
+    ConsoleTable::TableChars chars;
+    chars.topDownSimple = '_';
+    chars.leftSeparation = '|';
+    chars.centreSeparation = '|';
+    chars.rightSeparation = '|';
+    chars.downSeparation = '|';
+    chars.topSeparation = '|';
+    chars.topRight = '|';
+    chars.downLeft = '|';
+    chars.downRight = '|';
+    chars.topLeft = '|';
+    chars.leftRightSimple = '|';
+    table.setTableChars(chars);
+	for(int i = 0; i < cinemas.size(); ++i) {
+        table[i][0] = to_string(i + 1);
+        table[i][1] = cinemas[i].name;
+    }
+    cout << table << endl;
+    cout << "Enter cinema number:\n" << endl;
+    cout.flush();
+    int op;
+    cin >> op;
+    bool flg = addSalone(salone, &cinemas[op - 1]);
+    if(flg) {
+        cout << "Salone created successfully :)";
+    } else {
+        cout << "Salone can't be created :(";
+    }
+    cout.flush();
+    delay();
+    menu();
+}
+
+void cinemaMenu() {
+    Cinema cinema;
+    cout << "Enter cinema name: ";
+    cout.flush();
+    cin >> cinema.name;
+    bool flg = addCinema(cinema);
+    if(flg) {
+        cout << "Cinema created successfully :)";
+    } else {
+        cout << "Cinema can't be created :(";
     }
     cout.flush();
     delay();
