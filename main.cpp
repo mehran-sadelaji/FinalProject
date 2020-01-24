@@ -8,7 +8,7 @@
 using namespace std;
 using ConsoleTable = samilton::ConsoleTable;
 
-#define delay() for(int i = 0; i < (int) 2e9; ++i)
+#define delay() for(int i = 0; i < (int) 1e9; ++i)
 
 struct Cinema;
 struct Salone;
@@ -30,6 +30,7 @@ void filmMenu();
 void sansMenu();
 void saloneMenu();
 void cinemaMenu();
+void buyTicketMenu();
 
 // structs
 
@@ -41,6 +42,7 @@ struct Cinema {
 struct Salone {
     int code;
     vector<Sans*> scheduls;
+    Cinema *cinema;
 };
 
 struct Sans {
@@ -48,6 +50,7 @@ struct Sans {
     time_t end;
     Film *film;
     int emptyCap;
+    Salone *salone;
 };
 
 struct Film {
@@ -69,6 +72,7 @@ vector<Film> films;
 vector<Sans> sanses;
 vector<Salone> salones;
 vector<Cinema> cinemas;
+bool readD = false;
 
 
 // functions
@@ -145,7 +149,7 @@ bool addCinema(Cinema &cinema) {
     return !flg;
 }
 
-bool butTicket(Sans &sans) {
+bool buyTicket(Sans &sans) {
     bool flg = false;
     if(sans.emptyCap == 0) {
         flg = true;
@@ -157,24 +161,31 @@ bool butTicket(Sans &sans) {
 }
 
 void readData() {
-    freopen("data.dat", "r", stdin);
+    //freopen("data.dat", "r", stdin);
+    FILE *fin = fopen("data.dat", "r");
     int cntAct;
-    cin >> cntAct;
+    fscanf(fin, "%d", &cntAct);
     for(int i = 0; i < cntAct; ++i) {
-        string name;
-        cin >> name;
+        // cin >> name;
+        char name[200];
+        fscanf(fin, "%s", name);
         Actor actor = {name};
+        //cerr << "addActor: " << name << " added\n";
         addActor(actor);
     }
     int cntFilm;
-    cin >> cntFilm;
+    // cin >> cntFilm;
+    cout << "salasm";
+    cout.flush();
+    fscanf(fin, "%d", &cntAct);
     for(int i = 0; i < cntFilm; ++i) {
-        string name;
+        char name[200];
         int length;
-        string content;
+        char content[500];
         string summary;
-        int cntActorsOfFilm;
-        cin >> name >> length >> content >> summary >> cntActorsOfFilm;
+        char cntActorsOfFilm[1000];
+        // cin >> name >> length >> content >> summary >> cntActorsOfFilm;
+        fscanf(fin, "%s %d %s %s %d", name, &length, content, summary, &cntActorsOfFilm);
         Film film;
         film.name = name;
         film.length = length;
@@ -182,95 +193,161 @@ void readData() {
         film.summary = summary;
         for(int j = 0; j < cntActorsOfFilm; ++j) {
             int addres;
-            scanf("%x ", &addres);
+            fscanf(fin ,"%d", &addres);
             film.actors.push_back((Actor *) addres);
         }
         addFilm(film);
     }
     int cntSans;
-    cin >> cntSans;
+    // cin >> cntSans;
+    fscanf(fin, "%d", &cntSans);
     for(int i = 0; i < cntSans; ++i) {
         tm start;
         tm end;
         int month, day, hour, minute;
-        cin >> month >> day >> hour >> minute;
+        // cin >> month >> day >> hour >> minute;
+        fscanf(fin, "%d %d %d %d", &month, &day, &hour, &minute);
         start.tm_mon = month;
         start.tm_mday = day;
         start.tm_hour = hour;
         start.tm_min = minute;
 
-        cin >> month >> day >> hour >> minute;
+        // cin >> month >> day >> hour >> minute;
+        fscanf(fin, "%d %d %d %d", &month, &day, &hour, &minute);
         end.tm_mon = month;
         end.tm_mday = day;
         end.tm_hour = hour;
         end.tm_min = minute;
 
         int addres;
-        scanf("%x", &addres);
+        fscanf(fin, "%x", &addres);
 
         int empCap;
-        cin >> empCap;
+        // cin >> empCap;
+        fscanf(fin, "%d", &empCap);
 
         int salonAddr;
-        scanf("%x", &salonAddr);
+        fscanf(fin, "%x", &salonAddr);
 
-        Sans sans = {mktime(&start), mktime(&end), (Film *) addres, empCap};
+        Sans sans = {mktime(&start), mktime(&end), (Film *) addres, empCap, (Salone *) salonAddr};
         addSans(sans, (Salone *) salonAddr);
     }
     int cntSalon;
-    cin >> cntSalon;
+    // cin >> cntSalon;
+    fscanf(fin, "%d", &cntSalon);
     for(int i = 0; i < cntSalon; ++i) {
         Salone salone;
-        int code = generateRandomNum();
+        int code;
+        // cin >> code;
+        fscanf(fin, "%d", &code);
         salone.code = code;
         int cntScheduls;
-        cin >> cntScheduls;
+        // cin >> cntScheduls;
+        fscanf(fin, "%d", &cntScheduls);
         for(int j = 0; j < cntScheduls; ++j) {
             int address;
-            scanf("%x ", &address);
+            fscanf(fin, "%x", &address);
             salone.scheduls.push_back((Sans *) address);
         }
 
         int cinemaAddr;
-        scanf("%x", &cinemaAddr);
+        fscanf(fin, "%x", &cinemaAddr);
 
         addSalone(salone, (Cinema *) cinemaAddr);
     }
     int cntCinema;
-    cin >> cntCinema;
+    // cin >> cntCinema;
+    fscanf(fin, "%d", &cntCinema);
     for(int i = 0; i < cntCinema; ++i) {
-        string name;
-        cin >> name;
+        char name[200];
+        // cin >> name;
+        fscanf(fin, "%s", name);
         Cinema cinema;
         cinema.name = name;
         int cntSalone;
-        cin >> cntSalone;
+        // cin >> cntSalone;
+        fscanf(fin, "%d", &cntSalon);
         for(int j = 0; j < cntSalone; ++j) {
             int saloneAddr;
-            cin >> saloneAddr;
+            // cin >> saloneAddr;
+            fscanf(fin, "%x", &saloneAddr);
             cinema.salones.push_back((Salone *) saloneAddr);
         }
         addCinema(cinema);
     }
+    fclose(fin);
+}
+
+void writeData() {
+    freopen("data.dat", "w", stdout);
+    cout << actors.size() << endl;
+    for(int i = 0; i < actors.size(); ++i) {
+        cout << actors[i].name << " ";
+    }
+    cout << endl;
+    cout << films.size() << endl;
+    for(int i = 0; i < films.size(); ++i) {
+        cout << films[i].name << " " << films[i].length << " " << films[i].content << " " << films[i].summary << endl;
+        cout << films[i].actors.size() << endl;
+        for(int j = 0; j < films[i].actors.size(); ++j) {
+            for(int k = 0; k < actors.size(); ++k) {
+                if(actors[k].name == films[i].actors[j]->name) {
+                    cout << &actors[k] << " ";
+                }
+            }
+        }
+    }
+    cout << endl;
+    cout << sanses.size() << endl;
+    for(int i = 0; i < sanses.size(); ++i) {
+        tm *start = localtime(&sanses[i].start);
+        cout << start->tm_mon << " " << start->tm_mday << " " << start->tm_hour << " " << start->tm_min << endl;
+        tm *end = localtime(&sanses[i].end);
+        cout << end->tm_mon << " " << end->tm_mday << " " << end->tm_hour << " " << end->tm_min << endl;
+        cout << sanses[i].film << endl;
+        cout << sanses[i].emptyCap << endl;
+        cout << sanses[i].salone << endl;
+    }
+    cout << endl;
+    cout << salones.size() << endl;
+    for(int i = 0; i < salones.size(); ++i) {
+        cout << salones[i].code << endl;
+        cout << salones[i].scheduls.size() << endl;
+        for(int j = 0; j < salones[i].scheduls.size(); ++j) {
+            cout << salones[i].scheduls[j] << " ";
+        }
+        cout << endl << salones[i].cinema << endl;
+    }
+    cout << endl;
+    cout << cinemas.size() << endl;
+    for(int i = 0; i < cinemas.size(); ++i) {
+        cout << cinemas[i].name << endl;
+        cout << cinemas[i].salones.size() << endl;
+        for(int j = 0; j < cinemas[i].salones.size(); ++j) {
+            cout << cinemas[i].salones[i] << " ";
+        }
+        cout << endl;
+    }
+
 }
 
 void menu() {
     ConsoleTable table(1, 1, samilton::Alignment::centre);
     ConsoleTable::TableChars chars;
-    chars.topDownSimple = '_';
-    chars.leftSeparation = '|';
-    chars.centreSeparation = '|';
-    chars.rightSeparation = '|';
-    chars.downSeparation = '|';
-    chars.topSeparation = '|';
-    chars.topRight = '|';
-    chars.downLeft = '|';
-    chars.downRight = '|';
-    chars.topLeft = '|';
-    chars.leftRightSimple = '|';
+    chars.topDownSimple = '=';
+    chars.leftSeparation = '=';
+    chars.centreSeparation = '=';
+    chars.rightSeparation = '=';
+    chars.downSeparation = '=';
+    chars.topSeparation = '=';
+    chars.topRight = '=';
+    chars.downLeft = '=';
+    chars.downRight = '=';
+    chars.topLeft = '=';
+    chars.leftRightSimple = '=';
     table.setTableChars(chars);
 
-    system("clear");
+    //system("clear");
 	table[0][0] = "1";
 	table[0][1] = "add actor";
 	table[1][0] = "2";
@@ -282,9 +359,9 @@ void menu() {
 	table[4][0] = "5";
 	table[4][1] = "add cinema";
 	table[5][0] = "6";
-	table[5][1] = "add by ticket";
-    table[5][0] = "0";
-	table[5][1] = "exit";
+	table[5][1] = "buy ticket";
+    table[6][0] = "0";
+	table[6][1] = "exit";
     cout << table << endl;
     cout << "Enter your option: " << endl;
     int op;
@@ -292,7 +369,10 @@ void menu() {
     switch (op)
     {
         case 0:
-            exit(1); 
+            cout << "writing changes :)";
+            writeData();
+            delay();
+            exit(1);
         case 1:
             actorMenu();
             break;
@@ -308,15 +388,15 @@ void menu() {
         case 5:
             cinemaMenu();
             break;
-
+        case 6:
+            buyTicketMenu();
+            break;
     default:
-        system("clear");
+        //system("clear");
         cout << "Your option isn't valid. select another one!";
         cout.flush();
         delay();
-        menu();
     }
-
 }
 
 void actorMenu() {
@@ -333,7 +413,6 @@ void actorMenu() {
     }
     cout.flush();
     delay();
-    menu();
 }
 
 void filmMenu() {
@@ -355,17 +434,17 @@ void filmMenu() {
 
     ConsoleTable table(1, 1, samilton::Alignment::centre);
     ConsoleTable::TableChars chars;
-    chars.topDownSimple = '_';
-    chars.leftSeparation = '|';
-    chars.centreSeparation = '|';
-    chars.rightSeparation = '|';
-    chars.downSeparation = '|';
-    chars.topSeparation = '|';
-    chars.topRight = '|';
-    chars.downLeft = '|';
-    chars.downRight = '|';
-    chars.topLeft = '|';
-    chars.leftRightSimple = '|';
+    chars.topDownSimple = '=';
+    chars.leftSeparation = '=';
+    chars.centreSeparation = '=';
+    chars.rightSeparation = '=';
+    chars.downSeparation = '=';
+    chars.topSeparation = '=';
+    chars.topRight = '=';
+    chars.downLeft = '=';
+    chars.downRight = '=';
+    chars.topLeft = '=';
+    chars.leftRightSimple = '=';
     table.setTableChars(chars);
 	for(int i = 0; i < actors.size(); ++i) {
         table[i][0] = to_string(i + 1);
@@ -392,7 +471,6 @@ void filmMenu() {
     }
     cout.flush();
     delay();
-    menu();
 }
 
 void sansMenu() {
@@ -451,17 +529,17 @@ void sansMenu() {
 
     ConsoleTable table(1, 1, samilton::Alignment::centre);
     ConsoleTable::TableChars chars;
-    chars.topDownSimple = '_';
-    chars.leftSeparation = '|';
-    chars.centreSeparation = '|';
-    chars.rightSeparation = '|';
-    chars.downSeparation = '|';
-    chars.topSeparation = '|';
-    chars.topRight = '|';
-    chars.downLeft = '|';
-    chars.downRight = '|';
-    chars.topLeft = '|';
-    chars.leftRightSimple = '|';
+    chars.topDownSimple = '=';
+    chars.leftSeparation = '=';
+    chars.centreSeparation = '=';
+    chars.rightSeparation = '=';
+    chars.downSeparation = '=';
+    chars.topSeparation = '=';
+    chars.topRight = '=';
+    chars.downLeft = '=';
+    chars.downRight = '=';
+    chars.topLeft = '=';
+    chars.leftRightSimple = '=';
     table.setTableChars(chars);
 	for(int i = 0; i < films.size(); ++i) {
         table[i][0] = to_string(i + 1);
@@ -489,7 +567,7 @@ void sansMenu() {
     cout << "Enter salone number: ";
     cout.flush();
     cin >> op;
-    
+    sans.salone = &salones[op - 1];
 
     bool flg = addSans(sans, &salones[op - 1]);
     if(flg) {
@@ -499,7 +577,6 @@ void sansMenu() {
     }
     cout.flush();
     delay();
-    menu();
 }
 
 void saloneMenu() {
@@ -508,17 +585,17 @@ void saloneMenu() {
 
     ConsoleTable table(1, 1, samilton::Alignment::centre);
     ConsoleTable::TableChars chars;
-    chars.topDownSimple = '_';
-    chars.leftSeparation = '|';
-    chars.centreSeparation = '|';
-    chars.rightSeparation = '|';
-    chars.downSeparation = '|';
-    chars.topSeparation = '|';
-    chars.topRight = '|';
-    chars.downLeft = '|';
-    chars.downRight = '|';
-    chars.topLeft = '|';
-    chars.leftRightSimple = '|';
+    chars.topDownSimple = '=';
+    chars.leftSeparation = '=';
+    chars.centreSeparation = '=';
+    chars.rightSeparation = '=';
+    chars.downSeparation = '=';
+    chars.topSeparation = '=';
+    chars.topRight = '=';
+    chars.downLeft = '=';
+    chars.downRight = '=';
+    chars.topLeft = '=';
+    chars.leftRightSimple = '=';
     table.setTableChars(chars);
 	for(int i = 0; i < cinemas.size(); ++i) {
         table[i][0] = to_string(i + 1);
@@ -529,6 +606,8 @@ void saloneMenu() {
     cout.flush();
     int op;
     cin >> op;
+    salone.cinema = &cinemas[op - 1];
+
     bool flg = addSalone(salone, &cinemas[op - 1]);
     if(flg) {
         cout << "Salone created successfully :)";
@@ -537,7 +616,6 @@ void saloneMenu() {
     }
     cout.flush();
     delay();
-    menu();
 }
 
 void cinemaMenu() {
@@ -553,11 +631,81 @@ void cinemaMenu() {
     }
     cout.flush();
     delay();
-    menu();
+}
+
+void buyTicketMenu() {
+    ConsoleTable table(1, 1, samilton::Alignment::centre);
+    ConsoleTable::TableChars chars;
+    chars.topDownSimple = '=';
+    chars.leftSeparation = '=';
+    chars.centreSeparation = '=';
+    chars.rightSeparation = '=';
+    chars.downSeparation = '=';
+    chars.topSeparation = '=';
+    chars.topRight = '=';
+    chars.downLeft = '=';
+    chars.downRight = '=';
+    chars.topLeft = '=';
+    chars.leftRightSimple = '=';
+    table.setTableChars(chars);
+
+    table[0][0] = "ٔNumber";
+    table[0][1] = "Film";
+    table[0][2] = "Start";
+    table[0][3] = "End";
+    table[0][4] = "Content";
+    table[0][5] = "Summary";
+    table[0][6] = "Capacity";
+
+    int cnt = 1;
+    time_t curr_time;
+	curr_time = time(0);
+	tm *tm_local = localtime(&curr_time);
+    for(int i = 0; i < sanses.size(); ++i) {
+        if(sanses[i].start >= curr_time && sanses[i].end > curr_time && sanses[i].emptyCap > 0) {
+            table[cnt][0] = cnt;
+            table[cnt][1] = sanses[i].film->name;
+            tm *sTime = localtime(&sanses[i].start);
+            table[cnt][2] = to_string(sTime->tm_mon + 1) + "-" + to_string(sTime->tm_mday) + "-" + to_string(sTime->tm_hour) + "-" + to_string(sTime->tm_min);
+
+            tm *eTime = localtime(&sanses[i].end);
+            table[cnt][3] = to_string(eTime->tm_mon + 1) + "-" + to_string(eTime->tm_mday) + "-" + to_string(eTime->tm_hour) + "-" + to_string(eTime->tm_min);
+
+            table[cnt][4] = sanses[i].film->content;
+            table[cnt][5] = sanses[i].film->summary;
+            table[cnt][6] = sanses[i].emptyCap;
+            ++cnt;
+        }
+    }
+    cout << table << endl;
+    cout << "Enter your sans number or enter 0 to exit: ";
+    cout.flush();
+    int op;
+    cin >> op;
+    if(op == 0) menu();
+    cnt = 1;
+    for(int i = 0; i < sanses.size(); ++i) {
+        if(sanses[i].start >= curr_time && sanses[i].end > curr_time && sanses[i].emptyCap > 0) {
+            if(cnt == op) {
+                bool flg = buyTicket(sanses[i]);
+                if(flg) {
+                    cout << "ticket bought successfully :)";
+                } else {
+                    cout << "can't buy ticket :(";
+                }
+                cout.flush();
+                break;
+            }
+        }
+    }
+    delay();
 }
 
 
 int main() {
-    srand(time(0));    
-    menu();
+    srand(time(0)); 
+    readData();
+    while(1) {
+        menu();
+    }
 }
