@@ -9,6 +9,7 @@ using namespace std;
 using ConsoleTable = samilton::ConsoleTable;
 
 #define delay() for(int i = 0; i < (int) 1e9; ++i)
+#define deb() cout << "error///////////////\n";cout.flush()
 
 struct Cinema;
 struct Salone;
@@ -35,17 +36,20 @@ void buyTicketMenu();
 // structs
 
 struct Cinema {
+    int id;
     string name;
     vector<Salone*> salones;
 };
 
 struct Salone {
+    int id;
     int code;
     vector<Sans*> scheduls;
     Cinema *cinema;
 };
 
 struct Sans {
+    int id;
     time_t start;
     time_t end;
     Film *film;
@@ -54,6 +58,7 @@ struct Sans {
 };
 
 struct Film {
+    int id;
     string name;
     int length;
     string content;
@@ -62,6 +67,7 @@ struct Film {
 };
 
 struct Actor {
+    int id;
     string name;
 };
 
@@ -169,21 +175,21 @@ void readData() {
         // cin >> name;
         char name[200];
         fscanf(fin, "%s", name);
-        Actor actor = {name};
+        Actor actor;
+        actor.name = name;
+        actor.id = actors.size();
         //cerr << "addActor: " << name << " added\n";
         addActor(actor);
     }
     int cntFilm;
     // cin >> cntFilm;
-    cout << "salasm";
-    cout.flush();
-    fscanf(fin, "%d", &cntAct);
+    fscanf(fin, "%d", &cntFilm);
     for(int i = 0; i < cntFilm; ++i) {
         char name[200];
         int length;
         char content[500];
-        string summary;
-        char cntActorsOfFilm[1000];
+        char summary[1000];
+        int cntActorsOfFilm;
         // cin >> name >> length >> content >> summary >> cntActorsOfFilm;
         fscanf(fin, "%s %d %s %s %d", name, &length, content, summary, &cntActorsOfFilm);
         Film film;
@@ -192,10 +198,11 @@ void readData() {
         film.content = content;
         film.summary = summary;
         for(int j = 0; j < cntActorsOfFilm; ++j) {
-            int addres;
-            fscanf(fin ,"%d", &addres);
-            film.actors.push_back((Actor *) addres);
+            int address;
+            fscanf(fin ,"%d", &address);
+            film.actors.push_back(&actors[address]);
         }
+        film.id = films.size();
         addFilm(film);
     }
     int cntSans;
@@ -220,18 +227,19 @@ void readData() {
         end.tm_min = minute;
 
         int addres;
-        fscanf(fin, "%x", &addres);
+        fscanf(fin, "%d", &addres);
 
         int empCap;
         // cin >> empCap;
         fscanf(fin, "%d", &empCap);
 
         int salonAddr;
-        fscanf(fin, "%x", &salonAddr);
+        fscanf(fin, "%d", &salonAddr);
 
-        Sans sans = {mktime(&start), mktime(&end), (Film *) addres, empCap, (Salone *) salonAddr};
-        addSans(sans, (Salone *) salonAddr);
+        Sans sans = {sanses.size(), mktime(&start), mktime(&end), &films[addres], empCap, &salones[salonAddr]};
+        addSans(sans, &salones[salonAddr]);
     }
+    deb();
     int cntSalon;
     // cin >> cntSalon;
     fscanf(fin, "%d", &cntSalon);
@@ -246,14 +254,15 @@ void readData() {
         fscanf(fin, "%d", &cntScheduls);
         for(int j = 0; j < cntScheduls; ++j) {
             int address;
-            fscanf(fin, "%x", &address);
-            salone.scheduls.push_back((Sans *) address);
+            fscanf(fin, "%d", &address);
+            salone.scheduls.push_back(&sanses[address]);
         }
 
         int cinemaAddr;
-        fscanf(fin, "%x", &cinemaAddr);
+        fscanf(fin, "%d", &cinemaAddr);
+        salone.cinema = &cinemas[cinemaAddr];
 
-        addSalone(salone, (Cinema *) cinemaAddr);
+        addSalone(salone, &cinemas[cinemaAddr]);
     }
     int cntCinema;
     // cin >> cntCinema;
@@ -270,8 +279,8 @@ void readData() {
         for(int j = 0; j < cntSalone; ++j) {
             int saloneAddr;
             // cin >> saloneAddr;
-            fscanf(fin, "%x", &saloneAddr);
-            cinema.salones.push_back((Salone *) saloneAddr);
+            fscanf(fin, "%d", &saloneAddr);
+            cinema.salones.push_back(&salones[saloneAddr]);
         }
         addCinema(cinema);
     }
@@ -292,7 +301,7 @@ void writeData() {
         for(int j = 0; j < films[i].actors.size(); ++j) {
             for(int k = 0; k < actors.size(); ++k) {
                 if(actors[k].name == films[i].actors[j]->name) {
-                    cout << &actors[k] << " ";
+                    cout << actors[k].id << " ";
                 }
             }
         }
@@ -304,9 +313,9 @@ void writeData() {
         cout << start->tm_mon << " " << start->tm_mday << " " << start->tm_hour << " " << start->tm_min << endl;
         tm *end = localtime(&sanses[i].end);
         cout << end->tm_mon << " " << end->tm_mday << " " << end->tm_hour << " " << end->tm_min << endl;
-        cout << sanses[i].film << endl;
+        cout << sanses[i].film->id << endl;
         cout << sanses[i].emptyCap << endl;
-        cout << sanses[i].salone << endl;
+        cout << sanses[i].salone->id << endl;
     }
     cout << endl;
     cout << salones.size() << endl;
@@ -314,9 +323,9 @@ void writeData() {
         cout << salones[i].code << endl;
         cout << salones[i].scheduls.size() << endl;
         for(int j = 0; j < salones[i].scheduls.size(); ++j) {
-            cout << salones[i].scheduls[j] << " ";
+            cout << salones[i].scheduls[j]->id << " ";
         }
-        cout << endl << salones[i].cinema << endl;
+        cout << endl << salones[i].cinema->id << endl;
     }
     cout << endl;
     cout << cinemas.size() << endl;
@@ -324,7 +333,7 @@ void writeData() {
         cout << cinemas[i].name << endl;
         cout << cinemas[i].salones.size() << endl;
         for(int j = 0; j < cinemas[i].salones.size(); ++j) {
-            cout << cinemas[i].salones[i] << " ";
+            cout << cinemas[i].salones[i]->id << " ";
         }
         cout << endl;
     }
@@ -404,7 +413,7 @@ void actorMenu() {
     cout << "\nEnter a name for actor:\n";
     cout.flush();
     cin >> name;
-    Actor actor = {name};
+    Actor actor = {actors.size(), name};
     bool flg = addActor(actor);
     if(flg) {
         cout << "Actor created successfully :)";
@@ -417,6 +426,7 @@ void actorMenu() {
 
 void filmMenu() {
     Film film;
+    film.id = films.size();
     cout << "\nEnter film name: ";
     cout.flush();
     cin >> film.name;
@@ -568,7 +578,7 @@ void sansMenu() {
     cout.flush();
     cin >> op;
     sans.salone = &salones[op - 1];
-
+    sans.id = sanses.size();
     bool flg = addSans(sans, &salones[op - 1]);
     if(flg) {
         cout << "sans added successfully :)";
@@ -581,6 +591,7 @@ void sansMenu() {
 
 void saloneMenu() {
     Salone salone;
+    salone.id = salones.size();
     salone.code = generateRandomNum();
 
     ConsoleTable table(1, 1, samilton::Alignment::centre);
@@ -620,6 +631,7 @@ void saloneMenu() {
 
 void cinemaMenu() {
     Cinema cinema;
+    cinema.id = cinemas.size();
     cout << "Enter cinema name: ";
     cout.flush();
     cin >> cinema.name;
@@ -705,6 +717,8 @@ void buyTicketMenu() {
 int main() {
     srand(time(0)); 
     readData();
+    cout << "salas///////\n";
+    cout.flush();
     while(1) {
         menu();
     }
