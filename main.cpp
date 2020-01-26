@@ -9,7 +9,7 @@ using namespace std;
 using ConsoleTable = samilton::ConsoleTable;
 
 #define delay() for(int i = 0; i < (int) 1e8; ++i)
-#define deb() cout << "error///////////////\n";cout.flush()
+#define deb() cout << "///////////////~ debug ~///////////////\n";cout.flush()
 
 struct Cinema;
 struct Salone;
@@ -50,8 +50,10 @@ struct Salone {
 
 struct Sans {
     int id;
-    time_t start;
-    time_t end;
+    long long start;
+    string startTime;
+    long long end;
+    string endTime;
     Film *film;
     int emptyCap;
     Salone *salone;
@@ -208,22 +210,21 @@ void readData() {
     vector<int> salonAddrVec;
     fscanf(fin, "%d", &cntSans);
     for(int i = 0; i < cntSans; ++i) {
-        tm start;
-        tm end;
-        int month, day, hour, minute;
+        long long start = 0;
+        long long end = 0;
+        string startT = "";
+        string endT = "";
+        long long month, day, hour, minute;
         // cin >> month >> day >> hour >> minute;
-        fscanf(fin, "%d %d %d %d", &month, &day, &hour, &minute);
-        start.tm_mon = month;
-        start.tm_mday = day;
-        start.tm_hour = hour;
-        start.tm_min = minute;
+        fscanf(fin, "%lld-%lld-%lld-%lld", &month, &day, &hour, &minute);
+        start = month * 31 * 24 * 60 + day * 24 * 60 + hour * 60 + minute;
+        startT = to_string(month) + "-" + to_string(day) + "-" + to_string(hour) + "-"  + to_string(minute);
 
         // cin >> month >> day >> hour >> minute;
-        fscanf(fin, "%d %d %d %d", &month, &day, &hour, &minute);
-        end.tm_mon = month;
-        end.tm_mday = day;
-        end.tm_hour = hour;
-        end.tm_min = minute;
+        fscanf(fin, "%lld-%lld-%lld-%lld", &month, &day, &hour, &minute);
+        end = month * 31 * 24 * 60 + day * 24 * 60 + hour * 60 + minute;
+        endT = to_string(month) + "-" + to_string(day) + "-" + to_string(hour) + "-"  + to_string(minute);
+
 
         int addres;
         fscanf(fin, "%d", &addres);
@@ -237,8 +238,10 @@ void readData() {
 
         Sans sans;
         sans.id = sanses.size();
-        sans.start = mktime(&start);
-        sans.end = mktime(&end);
+        sans.start = start;
+        sans.startTime = startT;
+        sans.end = end;
+        sans.endTime = endT;
         sans.film = &films[addres];
         sans.emptyCap = empCap;
         // sans.salone = &salones[salonAddr];
@@ -343,15 +346,26 @@ void writeData() {
         cout << endl;
     }
     cout << endl;
-    cout << sanses.size() << endl;
+
+    
+    time_t curr_time;
+	curr_time = time(0);
+	tm *tm_local = localtime(&curr_time);
+    long long num = tm_local->tm_mon * 31 * 24 * 60 + tm_local->tm_mday * 24 * 60 + tm_local->tm_hour * 60 + tm_local->tm_min;
+
+    int x = 0;
     for(int i = 0; i < sanses.size(); ++i) {
-        tm *start = localtime(&sanses[i].start);
-        cout << start->tm_mon << " " << start->tm_mday << " " << start->tm_hour << " " << start->tm_min << endl;
-        tm *end = localtime(&sanses[i].end);
-        cout << end->tm_mon << " " << end->tm_mday << " " << end->tm_hour << " " << end->tm_min << endl;
-        cout << sanses[i].film->id << endl;
-        cout << sanses[i].emptyCap << endl;
-        cout << sanses[i].salone->id << endl;
+        if(sanses[i].start > num) x++;
+    }
+    cout << x << endl;
+    for(int i = 0; i < sanses.size(); ++i) {
+        if(sanses[i].start > num) {
+            cout << sanses[i].startTime << endl;
+            cout << sanses[i].endTime << endl;
+            cout << sanses[i].film->id << endl;
+            cout << sanses[i].emptyCap << endl;
+            cout << sanses[i].salone->id << endl;
+        }
     }
     cout << endl;
     cout << salones.size() << endl;
@@ -374,9 +388,6 @@ void writeData() {
         cout << endl;
     }
 
-
-
-
 }
 
 void menu() {
@@ -395,7 +406,7 @@ void menu() {
     chars.leftRightSimple = '=';
     table.setTableChars(chars);
 
-    //system("clear");
+    system("clear");
 	table[0][0] = "1";
 	table[0][1] = "add actor";
 	table[1][0] = "2";
@@ -440,7 +451,7 @@ void menu() {
             buyTicketMenu();
             break;
     default:
-        //system("clear");
+        system("clear");
         cout << "Your option isn't valid. select another one!";
         cout.flush();
         delay();
@@ -452,7 +463,7 @@ void actorMenu() {
     cout << "\nEnter a name for actor:\n";
     cout.flush();
     cin >> name;
-    Actor actor = {actors.size(), name};
+    Actor actor = {(int) actors.size(), name};
     bool flg = addActor(actor);
     if(flg) {
         cout << "Actor created successfully :)";
@@ -528,17 +539,18 @@ void sansMenu() {
     cout.flush();
     string startTime;
     cin >> startTime;
+    sans.startTime = startTime;
     string tim = "";
-    tm stTime;
     int cnt = 0;
+    long long start = 0;
     for(char c : startTime) {
         if(c == '-') {
             if(cnt == 0) {
-                stTime.tm_mon = stoi(tim);
+                start += stoi(tim) * 31 * 24 * 60;
             } else if(cnt == 1) {
-                stTime.tm_mday = stoi(tim);
+                start += stoi(tim) * 24 * 60;
             }   else if(cnt == 2) {
-                stTime.tm_hour = stoi(tim);
+                start += stoi(tim) * 60;
             }
             cnt++;
             tim = "";
@@ -546,24 +558,25 @@ void sansMenu() {
             tim += c;
         }
     }
-    stTime.tm_min = stoi(tim);
-    sans.start = mktime(&stTime);
+    start += stoi(tim);
+    sans.start = start;
 
     cout << "\nEnter sans end time as this form month-day-hour-minute for example(4-13-18-30): ";
     cout.flush();
     string endTime;
     cin >> endTime;
+    sans.endTime = endTime;
     tim = "";
-    tm edTime;
     cnt = 0;
+    long long end = 0;
     for(char c : endTime) {
         if(c == '-') {
             if(cnt == 0) {
-                edTime.tm_mon = stoi(tim);
+                end += stoi(tim) * 31 * 24 * 60;
             } else if(cnt == 1) {
-                edTime.tm_mday = stoi(tim);
+                end += stoi(tim) * 24 * 60;
             }   else if(cnt == 2) {
-                edTime.tm_hour = stoi(tim);
+                end += stoi(tim) * 60;
             }
             cnt++;
             tim = "";
@@ -571,9 +584,8 @@ void sansMenu() {
             tim += c;
         }
     }
-    edTime.tm_min = stoi(tim);
-    sans.end = mktime(&edTime);
-
+    end += stoi(tim);
+    sans.end = end;
     // film of sans
 
     ConsoleTable table(1, 1, samilton::Alignment::centre);
@@ -712,16 +724,13 @@ void buyTicketMenu() {
     time_t curr_time;
 	curr_time = time(0);
 	tm *tm_local = localtime(&curr_time);
+    long long num = tm_local->tm_mon * 31 * 24 * 60 + tm_local->tm_mday * 24 * 60 + tm_local->tm_hour * 60 + tm_local->tm_min;
     for(int i = 0; i < sanses.size(); ++i) {
         if(sanses[i].start >= curr_time && sanses[i].end > curr_time && sanses[i].emptyCap > 0) {
             table[cnt][0] = cnt;
             table[cnt][1] = sanses[i].film->name;
-            tm *sTime = localtime(&sanses[i].start);
-            table[cnt][2] = to_string(sTime->tm_mon + 1) + "-" + to_string(sTime->tm_mday) + "-" + to_string(sTime->tm_hour) + "-" + to_string(sTime->tm_min);
-
-            tm *eTime = localtime(&sanses[i].end);
-            table[cnt][3] = to_string(eTime->tm_mon + 1) + "-" + to_string(eTime->tm_mday) + "-" + to_string(eTime->tm_hour) + "-" + to_string(eTime->tm_min);
-
+            table[cnt][2] = sanses[i].startTime;
+            table[cnt][3] = sanses[i].endTime;
             table[cnt][4] = sanses[i].film->content;
             table[cnt][5] = sanses[i].film->summary;
             table[cnt][6] = sanses[i].emptyCap;
@@ -733,7 +742,7 @@ void buyTicketMenu() {
     cout.flush();
     int op;
     cin >> op;
-    if(op == 0) menu();
+    if(op == 0) return;
     cnt = 1;
     for(int i = 0; i < sanses.size(); ++i) {
         if(sanses[i].start >= curr_time && sanses[i].end > curr_time && sanses[i].emptyCap > 0) {
